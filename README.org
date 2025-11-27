@@ -1,0 +1,129 @@
+#+TITLE: ac-oauth2.el - using OAuth2 with Gnus+IMAP+smtpmail
+#+AUTHOR: Antonio Carzaniga
+
+* Example Configuration for the Impatient
+
+Below is a configuration and usage example based on the author's own
+configuration, which uses MS' e-mail services:
+
+#+begin_src emacs-lisp
+(use-package ac-oauth2
+    :hook ((gnus-get-new-news . ac/oauth2-get-access-if-necessary)
+           (message-send . ac/oauth2-get-access-if-necessary))
+    :config
+    (ac/oauth2-accounts
+      '(("Work"
+         :user "firstname.lastname@example.com"
+         :imap-host "outlook.office365.com"
+         :imap-port 993
+         :smtp-host "smtp.office365.com"
+         :smtp-port 587
+
+         :client-id "5ecd2dc4-..."		;; see CLIENT-ID below
+         :client-secret "j-k8Q..."		;
+
+         :scope "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send offline_access"
+
+         ;; see TENANT-ID below for more information on these URLs
+         :auth-url "https://login.microsoftonline.com/95bdc.../oauth2/v2.0/authorize"
+	    :token-url "https://login.microsoftonline.com/95bdc.../oauth2/v2.0/token"
+
+         ;; Store the access token (password) in this authinfo
+         ;; file, and add this file to your `auth-sources'. Default
+         ;; is `ac/oauth2-authinfo-file'.
+         :authinfo-file "~/.work-authinfo"
+
+         ;; If you want to use a specific browser and browser
+         ;; profile to handle the authorization business.
+	    ;; :browser-name "firefox"          ; use firefox to authenticate
+	    ;; :browser-args ("-P" "work")      ; with the "work" profile
+	 ))
+      )
+)
+
+(setq mail-sources
+      '((imap
+         :server "outlook.office365.com"
+         :port 993
+         :stream tls
+         :user "myusername@example.com"
+         :authentication xoauth2
+         :mailbox "INBOX"
+         :predicate "1:*")))
+
+(setq smtpmail-smtp-server "smtp.office365.com"
+      smtpmail-smtp-service 587
+      smtpmail-smtp-user "firstname.lastname@example.com"
+      smtpmail-stream-type 'starttls)
+
+(setq gnus-secondary-select-methods
+      '((nnimap "usi"
+		(nnimap-address "outlook.office365.com")
+		(nnimap-server-port 993)
+		(nnimap-stream tls)
+		(nnimap-user "myusername@example.com")
+		(nnimap-authenticator xoauth2)
+		(nnimap-inbox "INBOX"))))
+#+end_src
+
+* Basic Ideas and Terminology for OAuth2
+
+You might want to read Section 1 (Introduction) of RFC6749: "[[https://www.rfc-editor.org/rfc/rfc6749#section-1][The OAuth
+2.0 Authorization Framework]]".  Here is the basic scenario: you work at
+/example.com/ and want to read your example.com e-mail hosted at
+/provider.com/ (e.g., MS).  You want to do that with your favorite
+email client, namely Emacs.  You are the "resource owner"; your email
+is the "protected resource"; provider.com is the "resource server" and
+also your "authorization server", though the roles are conceptually
+distinct; and Emacs is the "client".  The idea is that you (resource
+owner) request that provider.com (authorization server) grant Emacs
+(client) access to your email (protected resource), so that Emacs can
+later connect to provider.com (resource server) to actually get your
+mail.
+
+The process of granting access is in fact a bit more involved.  You
+first get an "authorization" token that then allows you to get an
+"access" token that contains the IMAP/SMTP authentication password
+that Emacs can then use to access your email.  The tokens remain
+valid for some specified time.
+
+So, OAuth2, which is implemented by oauth.el plus some code here,
+handles the token business, while Gnus, smtpmail.el, and imap.el
+handle the actual email exchanges.
+
+* Client-Id and Client-Secret
+
+Your "client" application must be known to your "authentication
+server" (see terminology above).  The CLIENT-ID and CLIENT-SECRET can
+be thought of as the username and password of your email application
+within your authentication server.  The CLIENT-SECRET may not be
+necessary, but the bottom line is that your client application must be
+somehow registered with your resource server, and you must have the
+corresponding CLIENT-ID.
+
+This is how it worked for me.  My client is Emacs with Gnus, and my
+resource server is MS.  And --- you might have guessed it --- MS does
+not by default recognize Emacs.  Still, fortunately, I was able to
+register my client application myself on the MS Azure "App
+registrations" page:
+
+    https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps
+
+So, that is where I got my CLIENT-ID and CLIENT-SECRET.  You might
+be able to find valid CLIENT-ID and CLIENT-SECRET codes elsewhere,
+perhaps well-known ones for other email clients.
+
+* Tenant-Id, Authorization URI, and Token URI
+
+You need two more crucial pieces of information to configure your
+OAuth2 system, namely the Authorization URI, and the Token URI.
+These should be public URIs at least within your organization.
+For me, the Authorization and Token URIs are:
+
+    https://login.microsoftonline.com/TENANT-ID/oauth2/v2.0/authorize
+    https://login.microsoftonline.com/TENANT-ID/oauth2/v2.0/token
+
+Where the TENANT-ID is my organization's identifier within the MS
+system, which I could get by going to the MS Azure "Overview" page:
+
+    https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview
