@@ -182,10 +182,10 @@ For example:
 
       ;; We use the `browse-url' functions to go to the
       ;; authorization and token URLs as part of the OAuth2
-      ;; protocol.  If you would do using a specific browser with
-      ;; specific arguments -- for example, because you save your
-      ;; credentials in a specific browser profile -- then you can specify
-      ;; your preferences here.
+      ;; protocol.  If you would like to do that using a specific
+      ;; browser with specific arguments -- for example, because you
+      ;; save your credentials in a specific browser profile -- then you
+      ;; can specify your preferences here.
 
       :browser-name \"firefox\"
       :browser-args (\"-P\" \"work\")
@@ -232,7 +232,7 @@ request within this number of seconds.")
 (defvar ac/oauth2-authinfo-file "~/.oauth2-authinfo"
   "Where we store the IMAP and SMTP access credentials we
 get from the Oauth2 access token.  This is the default file name.  You
-can also have a specific an authinfo file for each account defined in
+can also have a specific authinfo file for each account defined in
 `ac/oauth2-accounts' using the `:authinfo-file' keyword.")
 
 (defvar ac/oauth2-access-token-expiration-time 0)
@@ -355,10 +355,9 @@ passed thorugh the redirect USI mechanism."
 						 user-name code-verifier)
   "Request OAuth authorization at AUTH-URL by launching `browse-url'.
 
-This function is a reimplementation of
-`oauth2-request-authorization' from `oauth2.el' that directly
-returns the code provided by the authentication service through
-the browser redirect mechanism."
+This function is a reimplementation of `oauth2-request-authorization'
+from `oauth2.el' that directly returns the code provided by the
+authentication service through the browser redirect mechanism."
   (browse-url (concat auth-url
                       (if (string-match-p "\?" auth-url) "&" "?")
                       "client_id=" (url-hexify-string client-id)
