@@ -1,6 +1,16 @@
 #+TITLE: ac-oauth2.el - using OAuth2 with Gnus+IMAP+smtpmail
 #+AUTHOR: Antonio Carzaniga
 
+This code provides some glue between the [[https://elpa.gnu.org/packages/oauth2.html][oauth2.el]] package and the
+Gnus Emacs email client.  The goal is to have an authentication
+process that is seamlessly integrated within Gnus and some of its
+components used for fetching and sending messages, namely IMAP and
+smtpmail.  In essence, this code uses functions from [[https://elpa.gnu.org/packages/oauth2.html][oauth2.el]] to
+handle the mechanics of OAuth2 protocol, with some additional features
+to automatically grab the authorization codes from the OAuth2
+exchange, so that it can be used by IMAP and smtpmail.
+
+
 * Example Configuration for the Impatient
 
 Below is a configuration and usage example based on the author's own
@@ -57,7 +67,7 @@ configuration, which uses MS' e-mail services:
       smtpmail-stream-type 'starttls)
 
 (setq gnus-secondary-select-methods
-      '((nnimap "usi"
+      '((nnimap "example"
 		(nnimap-address "outlook.office365.com")
 		(nnimap-server-port 993)
 		(nnimap-stream tls)
