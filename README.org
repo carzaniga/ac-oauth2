@@ -18,6 +18,7 @@ configuration, which uses MS' e-mail services:
 
 #+begin_src emacs-lisp
 (use-package ac-oauth2
+    :after (message gnus oauth2)
     :hook ((gnus-get-new-news . ac/oauth2-get-access-if-necessary)
            (message-send . ac/oauth2-get-access-if-necessary))
     :config
