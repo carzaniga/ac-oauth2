@@ -466,7 +466,7 @@ information is used.  Otherwise, use the first account in
     (ac/oauth2-browser-push account)
     (advice-add 'oauth2-request-authorization :override #'ac/oauth2-request-authorization)
     (unwind-protect
-	(let (token access-token)
+	(let (token access-token refresh)
 	  (setq token (oauth2-auth-and-store (plist-get account :auth-url)
 					     (plist-get account :token-url)
 					     (plist-get account :scope)
@@ -476,8 +476,12 @@ information is used.  Otherwise, use the first account in
 	  (unless token
 	    (error "Could not get OAuth2 authorization token for account `%s'."
 		   (or account-id "(default)")))
-	  (setq access-token (oauth2-token-access-token (oauth2-refresh-access token)))
+	  (setq refresh (oauth2-refresh-access token))
+	  (setq access-token (oauth2-token-access-token refresh))
 	  (unless access-token
+	    (let ((error-description (cdr (assoc 'error_description
+						 (oauth2-token-access-response refresh)))))
+	      (message "OAuth2 refresh response: %s" error-description))
 	    (error "Could not get OAuth2 access token for account `%s'."
 		   (or account-id "(default)")))
 	  (when-let ((access-response (oauth2-token-access-response token))
@@ -502,11 +506,11 @@ information is used.  Otherwise, use the first account in
 		 (format "machine %s port %d login %s password \"%s\"\n"
 			 imap-host imap-port (plist-get account :user) access-token)))
 	      (write-file authinfo-file nil))
-	      (unless (member authinfo-file auth-sources)
-		(push authinfo-file auth-sources))
-	      (setq mail-source-password-cache nil)
-	      (auth-source-forget+ :host smtp-host)
-	      (auth-source-forget+ :host imap-host)))
+	    (unless (member authinfo-file auth-sources)
+	      (push authinfo-file auth-sources))
+	    (setq mail-source-password-cache nil)
+	    (auth-source-forget+ :host smtp-host)
+	    (auth-source-forget+ :host imap-host)))
       (advice-remove 'oauth2-request-authorization #'ac/oauth2-request-authorization)
       (ac/oauth2-browser-pop)
       (ac/oauth2-srv-stop))))
