@@ -262,13 +262,13 @@ can also have a specific authinfo file for each account defined in
 %s
 </p>
 </body></html>" body-text)))
-    (insert
-     (format "HTTP/1.1 %d %s\r\n" code code-text)
-     "Connection: close\r\n"
-     "Content-Type: text/html\r\n"
-     (format "Content-Length: %d\r\n" (length html-object))
-     "\r\n"
-     html-object))
+      (insert
+       (format "HTTP/1.1 %d %s\r\n" code code-text)
+       "Connection: close\r\n"
+       "Content-Type: text/html\r\n"
+       (format "Content-Length: %d\r\n" (length html-object))
+       "\r\n"
+       html-object))
     (process-send-region proc (point-min) (point-max))
     (process-send-eof proc)))
 
@@ -424,10 +424,10 @@ browser and arguments variables with `ac/oauth2-browser-pop'."
     (if (not account)
 	(error "Could not find OAuth2 Account `%s'" (or account-id "(default)")))
     (mapc (lambda (sym)
-	     (if (not (plist-get account sym))
-		 (error "Property `%s' is undefined for account `%s'"
-			(symbol-name sym) (or account-id "(default)"))))
-	   '(:auth-url :token-url :scope :client-id :client-secret))
+	    (if (not (plist-get account sym))
+		(error "Property `%s' is undefined for account `%s'"
+		       (symbol-name sym) (or account-id "(default)"))))
+	  '(:auth-url :token-url :scope :client-id :client-secret))
     account))
 
 (defun ac/oauth2-get-authorization (&rest account-id)
