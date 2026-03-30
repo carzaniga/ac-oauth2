@@ -3,7 +3,7 @@
 ;; Copyright (C) 2024-2025 Antonio Carzaniga
 
 ;; Author: Antonio Carzaniga <antonio.carzaniga@usi.ch>
-;; Version: 0.01
+;; Version: 0.02
 
 ;; This file is NOT part of GNU Emacs.
 
